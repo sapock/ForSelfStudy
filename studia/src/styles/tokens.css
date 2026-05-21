@@ -1,0 +1,114 @@
+/* OPUS-X Design System — Foundations: Color · Type · Spacing · Radius · Shadow · Motion */
+
+/* ---------- Webfonts ---------- */
+@font-face { font-family: "Noto Sans KR"; font-style: normal; font-weight: 100; font-display: swap; src: url("/fonts/NotoSansKR-Thin.ttf") format("truetype"); }
+@font-face { font-family: "Noto Sans KR"; font-style: normal; font-weight: 200; font-display: swap; src: url("/fonts/NotoSansKR-ExtraLight.ttf") format("truetype"); }
+@font-face { font-family: "Noto Sans KR"; font-style: normal; font-weight: 300; font-display: swap; src: url("/fonts/NotoSansKR-Light.ttf") format("truetype"); }
+@font-face { font-family: "Noto Sans KR"; font-style: normal; font-weight: 400; font-display: swap; src: url("/fonts/NotoSansKR-Regular.ttf") format("truetype"); }
+@font-face { font-family: "Noto Sans KR"; font-style: normal; font-weight: 500; font-display: swap; src: url("/fonts/NotoSansKR-Medium.ttf") format("truetype"); }
+@font-face { font-family: "Noto Sans KR"; font-style: normal; font-weight: 600; font-display: swap; src: url("/fonts/NotoSansKR-SemiBold.ttf") format("truetype"); }
+@font-face { font-family: "Noto Sans KR"; font-style: normal; font-weight: 700; font-display: swap; src: url("/fonts/NotoSansKR-Bold.ttf") format("truetype"); }
+@font-face { font-family: "Noto Sans KR"; font-style: normal; font-weight: 800; font-display: swap; src: url("/fonts/NotoSansKR-ExtraBold.ttf") format("truetype"); }
+@font-face { font-family: "Noto Sans KR"; font-style: normal; font-weight: 900; font-display: swap; src: url("/fonts/NotoSansKR-Black.ttf") format("truetype"); }
+
+:root {
+  /* ---------- Color palette ---------- */
+  --gray-25:  #FCFCFD;
+  --gray-50:  #F9FAFB;
+  --gray-100: #F2F4F7;
+  --gray-200: #EAECF0;
+  --gray-300: #D0D5DD;
+  --gray-400: #98A2B3;
+  --gray-500: #667085;
+  --gray-600: #475467;
+  --gray-700: #344054;
+  --gray-800: #1D2939;
+  --gray-900: #101828;
+
+  --purple-25:  #FAFAFF;
+  --purple-50:  #F4F3FF;
+  --purple-100: #EBE9FE;
+  --purple-200: #D9D6FE;
+  --purple-300: #BDB4FE;
+  --purple-400: #9B8AFB;
+  --purple-500: #7A5AF8;
+  --purple-600: #6941C6;
+  --purple-700: #53389E;
+  --purple-800: #42307D;
+  --purple-900: #2C1C5F;
+
+  --blue-50:  #EFF8FF;
+  --blue-100: #D1E9FF;
+  --blue-200: #B2DDFF;
+  --blue-300: #84CAFF;
+  --blue-400: #53B1FD;
+  --blue-500: #2E90FA;
+  --blue-600: #1570EF;
+  --blue-700: #175CD3;
+  --blue-800: #1849A9;
+  --blue-900: #194185;
+
+  --green-50:  #ECFDF3;
+  --green-100: #D1FADF;
+  --green-200: #A6F4C5;
+  --green-300: #6CE9A6;
+  --green-400: #32D583;
+  --green-500: #12B76A;
+  --green-600: #039855;
+  --green-700: #027A48;
+  --green-800: #05603A;
+  --green-900: #054F31;
+
+  --yellow-50:  #FFFAEB;
+  --yellow-100: #FEF0C7;
+  --yellow-200: #FEDF89;
+  --yellow-300: #FEC84B;
+  --yellow-400: #FDB022;
+  --yellow-500: #F79009;
+  --yellow-600: #DC6803;
+  --yellow-700: #B54708;
+  --yellow-800: #93370D;
+  --yellow-900: #7A2E0E;
+
+  --red-50:  #FEF3F2;
+  --red-100: #FEE4E2;
+  --red-200: #FECDCA;
+  --red-300: #FDA29B;
+  --red-400: #F97066;
+  --red-500: #F04438;
+  --red-600: #D92D20;
+  --red-700: #B42318;
+  --red-800: #912018;
+  --red-900: #7A271A;
+
+  /* ---------- Semantic tokens ---------- */
+  --bg-canvas: var(--gray-50);
+  --bg-surface: #fff;
+
+  /* ---------- Typography ---------- */
+  --font-sans:    "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono:    "Menlo", "Consolas", "DejaVu Sans Mono", monospace;
+
+  /* ---------- Shadow ---------- */
+  --shadow-xs: 0 1px 2px 0 rgba(16,24,40,0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(16,24,40,0.1), 0 1px 2px -1px rgba(16,24,40,0.1);
+  --shadow-md: 0 4px 8px -2px rgba(16,24,40,0.1), 0 2px 4px -2px rgba(16,24,40,0.06);
+  --shadow-lg: 0 12px 16px -4px rgba(16,24,40,0.08), 0 4px 6px -2px rgba(16,24,40,0.03);
+  --shadow-xl: 0 20px 24px -4px rgba(16,24,40,0.08), 0 8px 8px -4px rgba(16,24,40,0.03);
+  --shadow-2xl: 0 24px 48px -12px rgba(16,24,40,0.18);
+
+  /* ---------- Motion ---------- */
+  --duration-fast:   120ms;
+  --duration-medium: 200ms;
+  --ease-standard:   cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+
+  /* ---------- Focus ring ---------- */
+  --ring-primary: 0 0 0 4px var(--purple-100);
+
+  /* ---------- Z-index ---------- */
+  --z-dropdown: 100;
+  --z-modal:    200;
+  --z-toast:    300;
+}
