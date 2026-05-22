@@ -5,6 +5,19 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      build_windows:
+        description: 'Windows (x64) 빌드'
+        type: boolean
+        default: true
+      build_mac:
+        description: 'macOS (x64 + arm64) 빌드'
+        type: boolean
+        default: true
+      build_linux:
+        description: 'Linux AppImage (x64) 빌드'
+        type: boolean
+        default: true
 
 defaults:
   run:
@@ -12,6 +25,7 @@ defaults:
 
 jobs:
   build-windows:
+    if: ${{ github.event_name == 'push' || inputs.build_windows }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,6 +50,7 @@ jobs:
           path: studia/release/*.zip
 
   build-mac:
+    if: ${{ github.event_name == 'push' || inputs.build_mac }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -60,6 +75,7 @@ jobs:
           path: studia/release/*.dmg
 
   build-linux:
+    if: ${{ github.event_name == 'push' || inputs.build_linux }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
