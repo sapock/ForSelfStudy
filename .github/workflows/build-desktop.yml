@@ -6,6 +6,10 @@ on:
       - 'v*'
   workflow_dispatch:
 
+defaults:
+  run:
+    working-directory: studia
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -15,6 +19,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: studia/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -28,7 +33,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Studia-Windows-x64
-          path: release/*.zip
+          path: studia/release/*.zip
 
   build-mac:
     runs-on: macos-latest
@@ -38,6 +43,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: studia/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -51,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Studia-Mac
-          path: release/*.dmg
+          path: studia/release/*.dmg
 
   build-linux:
     runs-on: ubuntu-latest
@@ -61,6 +67,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: studia/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -74,4 +81,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Studia-Linux-x64
-          path: release/*.AppImage
+          path: studia/release/*.AppImage
