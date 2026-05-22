@@ -40,14 +40,18 @@ jobs:
 
       - name: Build
         run: npm run electron:build:win
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: Studia-Windows-x64
           path: studia/release/*.zip
+
+      - name: Attach to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: studia/release/*.zip
 
   build-mac:
     if: ${{ github.event_name == 'push' || inputs.build_mac }}
@@ -65,14 +69,18 @@ jobs:
 
       - name: Build
         run: npm run electron:build
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: Studia-Mac
           path: studia/release/*.dmg
+
+      - name: Attach to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: studia/release/*.dmg
 
   build-linux:
     if: ${{ github.event_name == 'push' || inputs.build_linux }}
@@ -90,11 +98,15 @@ jobs:
 
       - name: Build
         run: npm run electron:build:linux
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: Studia-Linux-x64
           path: studia/release/*.AppImage
+
+      - name: Attach to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: studia/release/*.AppImage
