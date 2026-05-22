@@ -1,0 +1,35 @@
+appId: com.studia.app
+productName: Studia
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - dist-electron/
+
+extraResources:
+  - from: dist
+    to: dist
+
+win:
+  target:
+    - target: zip
+      arch:
+        - x64
+  artifactName: Studia-Windows-${arch}.zip
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  artifactName: Studia-Mac-${arch}.dmg
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+  artifactName: Studia-Linux-${arch}.AppImage
