@@ -4,6 +4,12 @@
   "version": "1.0.0",
   "type": "module",
   "main": "dist-electron/main.cjs",
+  "description": "플래시카드 기반 개인 학습 앱",
+  "author": "sapock",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sapock/ForSelfStudy.git"
+  },
   "scripts": {
     "dev": "concurrently \"vite\" \"tsx server/index.ts\"",
     "dev:ui": "vite",
@@ -12,8 +18,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "electron:bundle": "esbuild electron/main.ts --bundle --platform=node --format=cjs --external:electron --outfile=dist-electron/main.cjs",
-    "electron:build:win": "npm run build && npm run electron:bundle && electron-builder --win --x64",
-    "electron:build:linux": "npm run build && npm run electron:bundle && electron-builder --linux --x64"
+    "electron:build:win": "npm run build && npm run electron:bundle && electron-builder --win --x64 --publish never",
+    "electron:build:linux": "npm run build && npm run electron:bundle && electron-builder --linux --x64 --publish never",
+    "electron:build": "npm run build && npm run electron:bundle && electron-builder --publish never"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",
