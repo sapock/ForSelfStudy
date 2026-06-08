@@ -1,231 +1,486 @@
 import type { Subject, StreakDay, ActivityEntry } from '../types';
 
-const NOW = Date.now();
-const DAY = 86400000;
-
-function mk(term: string, def: string, opts: {
-  id?: string; starred?: boolean; mastered?: 0|1|2;
-  correct?: number; wrong?: number;
-  lastReviewedAt?: number | null; nextReviewAt?: number | null; note?: string;
-} = {}) {
-  return {
-    id: opts.id || Math.random().toString(36).slice(2, 10),
-    term, def,
-    starred: !!opts.starred,
-    mastered: (opts.mastered ?? 0) as 0|1|2,
-    correct: opts.correct || 0,
-    wrong:   opts.wrong   || 0,
-    lastReviewedAt: opts.lastReviewedAt ?? null,
-    nextReviewAt:   opts.nextReviewAt   ?? (NOW + Math.floor(Math.random() * 5 - 1) * DAY),
-    note: opts.note || '',
-  };
-}
-
 export const DEFAULT_SUBJECTS: Subject[] = [
   {
-    id: "sub-info",
-    name: "정보처리기사 · 필기",
-    emoji: "💻",
-    accent: "purple",
-    category: "IT 자격증",
-    description: "5과목 통합 핵심 키워드 및 기출 개념 정리",
-    color: "var(--purple-600)",
+    id: 's1', name: '정보처리기사 · 필기', emoji: '💻', accent: 'purple',
+    category: '자격증', color: '#7c3aed',
+    description: '정보처리기사 필기 시험 대비 핵심 과목 정리',
     chapters: [
       {
-        id: "ch-sw-design",
-        name: "1과목 · 소프트웨어 설계",
-        items: [
-          mk("요구사항 분석", "이해관계자의 요구를 식별·문서화·검증하는 단계. 기능/비기능 요구로 구분된다.", { mastered: 2, correct: 4, wrong: 0, starred: true, lastReviewedAt: NOW - DAY }),
-          mk("UML 다이어그램 종류", "구조 다이어그램(클래스·객체·컴포넌트·배치 등) 6종 + 행위 다이어그램(유스케이스·시퀀스·상태·활동·통신·상호작용 개요·타이밍) 7종.", { mastered: 1, correct: 2, wrong: 1 }),
-          mk("디자인 패턴 GoF 3분류", "생성(Creational), 구조(Structural), 행위(Behavioral) 패턴.", { mastered: 2, correct: 3, wrong: 0, starred: true }),
-          mk("애자일 방법론 4가지 가치", "개인과 상호작용 > 프로세스, 작동하는 SW > 문서, 고객과의 협력 > 계약, 변화 대응 > 계획.", { mastered: 1, correct: 1, wrong: 1 }),
-          mk("소프트웨어 아키텍처 4+1 뷰", "논리·프로세스·구현·배치 + 유스케이스 뷰.", { mastered: 0 }),
-          mk("MVC 패턴", "Model(데이터) · View(표현) · Controller(입력 처리). 관심사 분리로 유지보수성 향상.", { mastered: 2, correct: 5, wrong: 1, starred: true }),
-        ],
+        id: 'c1-1', name: '1과목 · 소프트웨어 설계', lastQuizAt: null, lastQuizScore: null,
+        description: `# 소프트웨어 설계
+
+## 소프트웨어 개발 방법론
+
+소프트웨어를 체계적으로 개발하기 위한 절차와 기법입니다.
+
+- **폭포수 모델**: 요구분석 → 설계 → 구현 → 테스트 → 유지보수, 순차 진행
+- **프로토타이핑**: 시제품(프로토타입)을 먼저 개발하여 사용자 피드백 반영
+- **나선형 모델**: 위험 분석을 반복하며 점진적으로 개발 (보헴)
+- **애자일**: 반복·증분 개발, 변화에 유연하게 대응 (스크럼, XP)
+
+## UML 다이어그램
+
+소프트웨어 구조와 동작을 시각적으로 표현하는 국제 표준 모델링 언어.
+
+| 다이어그램 | 설명 |
+|-----------|------|
+| 클래스 | 클래스 구조와 관계 표현 |
+| 시퀀스 | 객체 간 메시지 흐름 (시간 순서) |
+| 유스케이스 | 사용자와 시스템의 상호작용 |
+| 상태 | 객체의 상태 변화 |
+| 활동 | 업무 흐름 (플로우차트와 유사) |
+
+## 디자인 패턴
+
+반복되는 설계 문제에 대한 검증된 해결책 (GoF 23가지).
+
+- **생성 패턴**: Singleton, Factory Method, Abstract Factory, Builder, Prototype
+- **구조 패턴**: Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy
+- **행위 패턴**: Chain of Responsibility, Command, Observer, Strategy, Template Method
+
+## 객체지향 설계 원칙 (SOLID)
+
+- **S** — Single Responsibility: 클래스는 하나의 책임만
+- **O** — Open/Closed: 확장에 열려있고 변경에 닫혀있어야
+- **L** — Liskov Substitution: 자식 클래스는 부모를 대체 가능해야
+- **I** — Interface Segregation: 인터페이스는 작게 분리
+- **D** — Dependency Inversion: 고수준 모듈이 저수준에 의존하면 안 됨`,
       },
       {
-        id: "ch-data-io",
-        name: "2과목 · 데이터 입출력 구현",
-        items: [
-          mk("정규화 1NF~3NF", "1NF 원자값 / 2NF 부분종속 제거 / 3NF 이행종속 제거.", { mastered: 2, correct: 4, wrong: 0 }),
-          mk("트랜잭션 ACID", "Atomicity · Consistency · Isolation · Durability.", { mastered: 1, correct: 2, wrong: 0, starred: true }),
-          mk("인덱스 종류", "B-Tree, Bitmap, Hash, Clustered/Non-clustered, Composite.", { mastered: 0 }),
-          mk("DCL 명령어", "GRANT, REVOKE, COMMIT, ROLLBACK — 데이터 제어어.", { mastered: 1, correct: 1, wrong: 1 }),
-          mk("이상현상(Anomaly)", "삽입·갱신·삭제 이상. 정규화로 해소.", { mastered: 0 }),
-        ],
+        id: 'c1-2', name: '2과목 · 소프트웨어 개발', lastQuizAt: null, lastQuizScore: null,
+        description: `# 소프트웨어 개발
+
+## 자료구조
+
+데이터를 효율적으로 저장·관리하는 구조입니다.
+
+- **선형 구조**: 배열, 연결 리스트, 스택(LIFO), 큐(FIFO), 덱
+- **비선형 구조**: 트리, 그래프
+- **스택 응용**: 수식 계산, 재귀 호출, 괄호 검사
+- **큐 응용**: 운영체제 작업 스케줄링, BFS 탐색
+
+## 정렬 알고리즘 비교
+
+| 알고리즘 | 평균 시간복잡도 | 특징 |
+|---------|--------------|------|
+| 버블 정렬 | O(n²) | 구현 간단, 비효율 |
+| 선택 정렬 | O(n²) | 교환 횟수 적음 |
+| 삽입 정렬 | O(n²) | 거의 정렬된 경우 빠름 |
+| 퀵 정렬 | O(n log n) | 평균 가장 빠름 |
+| 합병 정렬 | O(n log n) | 안정 정렬, 추가 공간 필요 |
+| 힙 정렬 | O(n log n) | 추가 공간 불필요 |
+
+## 테스트 기법
+
+- **화이트박스 테스트**: 내부 구조 기반, 코드 커버리지 측정
+  - 구문 커버리지, 분기 커버리지, 경로 커버리지
+- **블랙박스 테스트**: 외부 기능 기반, 명세서 기준
+  - 동치 분할, 경계값 분석, 원인-결과 그래프`,
       },
       {
-        id: "ch-server",
-        name: "4과목 · 서버 프로그램 구현",
-        items: [
-          mk("배치 스케줄러 종류", "Spring Batch, Quartz, Control-M — 작업 정의·실행·모니터링 도구.", { mastered: 0 }),
-          mk("DI(의존성 주입)", "객체 간 결합도를 낮추기 위해 외부에서 의존 객체를 주입하는 방식.", { mastered: 1, correct: 2, wrong: 0 }),
-          mk("WAS의 역할", "동적 컨텐츠 처리, 트랜잭션 관리, 세션 관리, 보안.", { mastered: 1, correct: 1, wrong: 0 }),
-          mk("REST 6원칙", "Client-Server · Stateless · Cacheable · Uniform Interface · Layered · Code on Demand.", { mastered: 0, starred: true }),
-        ],
+        id: 'c1-3', name: '3과목 · 데이터베이스 활용', lastQuizAt: null, lastQuizScore: null,
+        description: `# 데이터베이스 활용
+
+## 관계형 데이터베이스 기본 개념
+
+- **릴레이션**: 행(튜플)과 열(속성)로 구성된 테이블
+- **기본키(PK)**: 튜플을 유일하게 식별하는 속성
+- **외래키(FK)**: 다른 릴레이션의 기본키를 참조하는 속성
+- **무결성 제약**: 개체 무결성 (PK≠NULL), 참조 무결성 (FK가 참조하는 값 존재)
+
+## SQL 핵심 구문
+
+\`\`\`sql
+SELECT 컬럼명 FROM 테이블명
+  WHERE 조건
+  GROUP BY 그룹기준 HAVING 그룹조건
+  ORDER BY 정렬기준 ASC|DESC;
+
+-- 조인
+INNER JOIN  -- 두 테이블의 교집합
+LEFT JOIN   -- 왼쪽 테이블 전체 + 오른쪽 일치
+\`\`\`
+
+## 정규화
+
+데이터 중복을 최소화하고 이상(Anomaly)을 방지합니다.
+
+- **1NF**: 원자값만 존재 (반복 그룹 제거)
+- **2NF**: 부분 함수 종속 제거 (완전 함수 종속)
+- **3NF**: 이행 함수 종속 제거
+- **BCNF**: 결정자이면서 후보키가 아닌 것 제거
+
+## 트랜잭션 ACID
+
+- **Atomicity** 원자성: 전부 실행 또는 전부 취소
+- **Consistency** 일관성: 실행 전후 DB가 일관된 상태 유지
+- **Isolation** 독립성: 동시 트랜잭션이 서로 영향을 주지 않음
+- **Durability** 지속성: 완료된 트랜잭션 결과는 영구 저장`,
       },
       {
-        id: "ch-interface",
-        name: "5과목 · 인터페이스 구현",
-        items: [
-          mk("JSON vs XML", "JSON: 경량·키밸류·자바스크립트 친화. XML: 문서지향·스키마·확장성.", { mastered: 2, correct: 3, wrong: 0 }),
-          mk("EAI 유형 4가지", "Point-to-Point · Hub & Spoke · Message Bus · Hybrid.", { mastered: 0 }),
-          mk("OAuth 2.0 흐름", "Authorization Code · Implicit · Password · Client Credentials 그랜트.", { mastered: 0 }),
-        ],
+        id: 'c1-4', name: '4과목 · 프로그래밍 언어 활용', lastQuizAt: null, lastQuizScore: null,
+        description: `# 프로그래밍 언어 활용
+
+## C언어 핵심
+
+- **포인터**: 변수의 메모리 주소를 저장하는 변수
+  - \`int *p = &a;\` — p는 a의 주소, \`*p\`는 a의 값
+- **배열과 포인터**: 배열명은 첫 번째 원소의 주소
+
+## 변수 유형과 생명주기
+
+| 유형 | 선언 위치 | 생명주기 | 초기값 |
+|-----|---------|---------|-------|
+| 지역변수 | 함수 내부 | 함수 실행 중 | 쓰레기값 |
+| 전역변수 | 함수 외부 | 프로그램 전체 | 0 |
+| 정적변수 | static | 프로그램 전체 | 0 |
+
+## Python 주요 특징
+
+- 인터프리터 언어, 동적 타이핑
+- 들여쓰기로 블록 구분
+- 리스트 컴프리헨션: \`[x*2 for x in range(10)]\`
+- 람다: \`lambda x: x**2\`
+
+## 언어 번역 프로그램
+
+- **컴파일러**: 전체 소스를 목적 코드로 변환 후 실행 (C, Java)
+- **인터프리터**: 한 줄씩 번역하며 실행 (Python, JavaScript)
+- **어셈블러**: 어셈블리어 → 기계어 번역`,
       },
     ],
   },
   {
-    id: "sub-os",
-    name: "운영체제",
-    emoji: "⚙️",
-    accent: "blue",
-    category: "전공 · CS",
-    description: "프로세스, 메모리, 파일 시스템 핵심 개념",
-    color: "var(--blue-600)",
+    id: 's2', name: '운영체제', emoji: '⚙️', accent: 'blue',
+    category: '전공', color: '#2563eb',
+    description: '운영체제 핵심 개념 정리',
     chapters: [
       {
-        id: "ch-process",
-        name: "프로세스 & 스레드",
-        items: [
-          mk("PCB 구성요소", "PID · 프로세스 상태 · PC · 레지스터 · 메모리 정보 · 스케줄링 정보.", { mastered: 2, correct: 5, wrong: 0, starred: true }),
-          mk("문맥 교환(Context Switch)", "CPU가 한 프로세스에서 다른 프로세스로 전환할 때 상태를 저장·복원하는 과정. 오버헤드 발생.", { mastered: 1, correct: 2, wrong: 1 }),
-          mk("스레드 vs 프로세스", "스레드는 자원을 공유, 프로세스는 독립. 스레드 생성·전환 비용이 낮음.", { mastered: 2, correct: 3, wrong: 0 }),
-          mk("스케줄링 알고리즘", "FCFS · SJF · Priority · RR · MLFQ.", { mastered: 1, correct: 1, wrong: 1, starred: true }),
-          mk("교착상태 4조건", "상호배제 · 점유와대기 · 비선점 · 순환대기.", { mastered: 0, starred: true }),
-          mk("세마포어 vs 뮤텍스", "세마포어: 카운터 기반 동기화. 뮤텍스: 1개의 임계영역 잠금(소유권 있음).", { mastered: 0 }),
-        ],
+        id: 'c2-1', name: '프로세스 관리', lastQuizAt: null, lastQuizScore: null,
+        description: `# 프로세스 관리
+
+## 프로세스 vs 스레드
+
+- **프로세스**: 실행 중인 프로그램, 독립된 메모리 공간 (코드·데이터·힙·스택)
+- **스레드**: 프로세스 내 실행 단위, 코드·데이터·힙 공유, 스택만 독립
+
+## 프로세스 상태 전이
+
+생성(New) → 준비(Ready) → 실행(Running) → 대기(Waiting) → 종료(Terminated)
+
+- **디스패치**: 준비 → 실행 (CPU 할당)
+- **선점**: 실행 → 준비 (타임아웃 또는 우선순위)
+- **블록**: 실행 → 대기 (I/O 요청 등)
+
+## CPU 스케줄링 알고리즘
+
+| 알고리즘 | 방식 | 특징 |
+|---------|------|------|
+| FCFS | 비선점 | 도착 순서대로, 콘보이 효과 |
+| SJF | 비선점 | 실행시간 짧은 것 우선, 기아 가능 |
+| Round Robin | 선점 | 타임퀀텀 기반, 응답시간 균등 |
+| 우선순위 | 선점/비선점 | 우선순위 높은 것 먼저, 기아 가능 |
+
+## 동기화 문제
+
+- **임계 구역(Critical Section)**: 공유 자원에 접근하는 코드 영역
+- **상호 배제**: 한 번에 하나의 프로세스만 임계 구역 접근
+- **뮤텍스**: 이진 세마포어, 락/언락
+- **세마포어**: 정수 변수로 접근 제어 (P연산: -1, V연산: +1)
+- **교착상태(Deadlock)**: 상호배제, 점유대기, 비선점, 순환대기 4가지 조건 동시 성립`,
       },
       {
-        id: "ch-memory",
-        name: "메모리 관리",
-        items: [
-          mk("가상 메모리", "물리 메모리보다 큰 주소 공간을 제공. 페이지/세그먼트 단위로 관리.", { mastered: 1, correct: 2, wrong: 0 }),
-          mk("페이지 교체 알고리즘", "FIFO · LRU · LFU · Optimal · Clock.", { mastered: 1, correct: 1, wrong: 2 }),
-          mk("스래싱(Thrashing)", "페이지 부재율이 급증해 CPU가 페이지 교체에만 시간을 쓰는 상태.", { mastered: 0, starred: true }),
-          mk("워킹셋", "프로세스가 일정 시간 동안 자주 참조하는 페이지 집합.", { mastered: 0 }),
-        ],
+        id: 'c2-2', name: '메모리 관리', lastQuizAt: null, lastQuizScore: null,
+        description: `# 메모리 관리
+
+## 메모리 할당 방식
+
+- **연속 할당**: 단순하나 외부 단편화 발생
+  - 최초 적합(First Fit), 최적 적합(Best Fit), 최악 적합(Worst Fit)
+- **페이징**: 고정 크기 페이지로 분할, **내부 단편화**만 발생
+- **세그멘테이션**: 가변 크기 세그먼트, **외부 단편화** 발생
+
+## 가상 메모리
+
+실제 메모리보다 큰 프로그램 실행을 가능하게 하는 기법.
+
+- **요구 페이징**: 필요할 때만 페이지를 메모리에 적재
+- **페이지 폴트**: 필요한 페이지가 메모리에 없을 때 발생 → 디스크에서 적재
+- **스래싱(Thrashing)**: 페이지 교체가 너무 빈번하여 CPU 이용률 급격히 저하
+
+## 페이지 교체 알고리즘
+
+| 알고리즘 | 방식 | 특징 |
+|---------|------|------|
+| FIFO | 가장 먼저 들어온 페이지 교체 | 벨라디의 이상 현상 가능 |
+| OPT | 앞으로 가장 오래 사용 안 할 페이지 | 최적이나 구현 불가 (미래 예측 필요) |
+| LRU | 가장 오랫동안 사용 안 한 페이지 | 현실적 최적 근사, 구현 복잡 |
+| LFU | 사용 빈도 가장 낮은 페이지 | 최근성 반영 부족 |`,
       },
       {
-        id: "ch-file",
-        name: "파일 시스템",
-        items: [
-          mk("아이노드(inode)", "Unix 파일 메타데이터 구조체. 파일명 제외한 모든 정보.", { mastered: 0 }),
-          mk("디스크 스케줄링", "FCFS · SSTF · SCAN · C-SCAN · LOOK · C-LOOK.", { mastered: 1, correct: 1, wrong: 0 }),
-          mk("RAID 0/1/5/10", "0 스트라이핑·1 미러링·5 패리티 분산·10 미러링+스트라이핑.", { mastered: 0, starred: true }),
-        ],
+        id: 'c2-3', name: '파일 시스템', lastQuizAt: null, lastQuizScore: null,
+        description: `# 파일 시스템
+
+## 파일 시스템 구조
+
+- **부트 블록**: OS 부팅에 필요한 코드
+- **슈퍼 블록**: 파일 시스템 전체 정보 (크기, 빈 블록 수 등)
+- **i-노드 블록**: 파일 메타데이터 (크기, 권한, 위치 등)
+- **데이터 블록**: 실제 파일 데이터
+
+## 디스크 스케줄링
+
+| 알고리즘 | 방식 |
+|---------|------|
+| FCFS | 요청 순서대로 처리 |
+| SSTF | 현재 위치에서 가장 가까운 요청 우선 (기아 가능) |
+| SCAN | 한 방향으로 끝까지 이동 후 반전 (엘리베이터) |
+| C-SCAN | 한 방향으로만 서비스, 반대 방향은 복귀만 |
+
+## RAID 레벨
+
+- **RAID 0**: 스트라이핑, 성능 향상, 오류 복구 없음
+- **RAID 1**: 미러링, 데이터 복제, 저장 공간 50%
+- **RAID 5**: 분산 패리티, 디스크 1개 고장 복구 가능
+- **RAID 6**: 이중 패리티, 디스크 2개 고장까지 복구 가능`,
       },
     ],
   },
   {
-    id: "sub-toeic",
-    name: "TOEIC · Part 5 빈출",
-    emoji: "🅰️",
-    accent: "yellow",
-    category: "어학",
-    description: "출제 빈도 상위 단어/숙어 + 예문",
-    color: "var(--yellow-600)",
+    id: 's3', name: 'TOEIC · Part 5 빈출', emoji: '📝', accent: 'yellow',
+    category: '어학', color: '#d97706',
+    description: 'TOEIC Part 5 빈출 문법 & 어휘 정리',
     chapters: [
       {
-        id: "ch-verbs",
-        name: "빈출 동사 (V)",
-        items: [
-          mk("implement", "v. 시행하다, 구현하다 — implement a new policy 새 정책을 시행하다.", { mastered: 2, correct: 6, wrong: 0, starred: true }),
-          mk("acquire", "v. 얻다, 인수하다 — acquire a competitor 경쟁사를 인수하다.", { mastered: 2, correct: 4, wrong: 0 }),
-          mk("postpone", "v. 연기하다 (= delay) — postpone the meeting 회의를 연기하다.", { mastered: 1, correct: 2, wrong: 1, starred: true }),
-          mk("retain", "v. 유지하다, 보유하다 — retain top talent 핵심 인재를 유지하다.", { mastered: 1, correct: 1, wrong: 1 }),
-          mk("oversee", "v. 감독하다, 총괄하다 — oversee operations.", { mastered: 0 }),
-          mk("expedite", "v. 신속히 처리하다 — expedite shipping 배송을 서두르다.", { mastered: 0 }),
-          mk("comply with", "phr. ~을 준수하다 — comply with regulations.", { mastered: 0, starred: true }),
-          mk("attribute A to B", "phr. A를 B의 탓/덕분으로 돌리다.", { mastered: 0 }),
-        ],
+        id: 'c3-1', name: '품사와 자리', lastQuizAt: null, lastQuizScore: null,
+        description: `# 품사와 자리
+
+## 명사 자리
+
+빈칸이 다음 위치에 있으면 **명사**를 선택합니다.
+
+- 관사(a/an/the) + ___
+- 형용사 + ___
+- 소유격(his/her/its/our) + ___
+- 전치사 + ___
+
+**빈출 명사 파생어**
+- employ → **employee**(직원) / **employer**(고용주) / **employment**(고용)
+- manage → **manager**(관리자) / **management**(경영)
+- produce → **production**(생산) / **productivity**(생산성)
+
+## 형용사 vs 부사 구별
+
+- **형용사**: 명사 수식, 주격 보어, 목적격 보어
+  - *The **annual** report is ready.*
+- **부사**: 동사·형용사·다른 부사 수식, 문장 전체 수식
+  - *Sales increased **significantly** last quarter.*
+
+## 동사 수 일치
+
+- 단수 주어 → 단수 동사 (3인칭 단수 s)
+- **The number of** + 복수명사 → **단수** 동사
+- **A number of** + 복수명사 → **복수** 동사
+- **Each / Every** + 단수명사 → **단수** 동사`,
       },
       {
-        id: "ch-adj",
-        name: "빈출 형용사 · 부사",
-        items: [
-          mk("substantial", "adj. 상당한 — a substantial increase 상당한 증가.", { mastered: 1, correct: 2, wrong: 0 }),
-          mk("preliminary", "adj. 예비의, 사전의 — preliminary results.", { mastered: 0 }),
-          mk("consecutive", "adj. 연속된 — three consecutive quarters.", { mastered: 0 }),
-          mk("readily", "adv. 손쉽게, 기꺼이.", { mastered: 0 }),
-        ],
+        id: 'c3-2', name: '전치사 & 접속사', lastQuizAt: null, lastQuizScore: null,
+        description: `# 전치사 & 접속사
+
+## 시간 전치사
+
+| 전치사 | 용법 | 예시 |
+|-------|------|------|
+| at | 정확한 시각 | at 3 p.m. |
+| on | 날짜·요일 | on Monday |
+| in | 월·연도·기간 | in June / in 2024 |
+| by | ~까지 (완료) | by Friday |
+| until | ~까지 (계속) | until Friday |
+| within | ~ 이내에 | within 3 days |
+| during | ~ 동안 (명사) | during the meeting |
+| for | ~ 동안 (기간) | for two hours |
+
+## 자주 혼동하는 표현
+
+- **despite / in spite of** + 명사구 (양보)
+- **although / even though** + 절 (양보)
+- **because of** + 명사구 (이유)
+- **because** + 절 (이유)
+- **in case of** + 명사구 (경우에 대비해)
+
+## 등위·상관 접속사
+
+- **both A and B** → 복수 동사
+- **either A or B** → B에 수 일치
+- **neither A nor B** → B에 수 일치
+- **not only A but also B** → B에 수 일치`,
       },
     ],
   },
   {
-    id: "sub-history",
-    name: "한국사 능력검정 · 심화",
-    emoji: "📜",
-    accent: "green",
-    category: "자격증 · 인문",
-    description: "기출 빈도 높은 인물·사건·제도",
-    color: "var(--green-600)",
+    id: 's4', name: '한국사 능력검정 · 심화', emoji: '🏯', accent: 'green',
+    category: '자격증', color: '#16a34a',
+    description: '한국사능력검정시험 심화 대비 시대별 핵심 정리',
     chapters: [
       {
-        id: "ch-three",
-        name: "삼국시대",
-        items: [
-          mk("광개토대왕릉비", "414년 장수왕이 부친의 업적을 기리기 위해 세움. 만주 집안.", { mastered: 1, correct: 2, wrong: 0, starred: true }),
-          mk("진흥왕 순수비", "신라 영토 확장 기념. 북한산·창녕·황초령·마운령.", { mastered: 0 }),
-          mk("나당전쟁", "676년 매소성·기벌포 전투에서 신라가 당을 격퇴, 삼국통일 완성.", { mastered: 0 }),
-        ],
+        id: 'c4-1', name: '고대 ~ 삼국시대', lastQuizAt: null, lastQuizScore: null,
+        description: `# 고대 ~ 삼국시대
+
+## 고조선
+
+- **단군왕검**: BC 2333년 건국, 홍익인간 이념
+- **8조법**: 살인·상해·절도 관련 법 (현재 3조만 전해짐)
+- **위만조선**: BC 194년, 철기 문화 보급, 중계 무역
+- **멸망**: BC 108년 한(漢) 무제에게 멸망 → 한사군 설치
+
+## 삼국의 성립과 발전
+
+| | 고구려 | 백제 | 신라 |
+|-|------|------|------|
+| 건국 | BC 37 (주몽) | BC 18 (온조) | BC 57 (박혁거세) |
+| 전성기 | 광개토대왕·장수왕 | 근초고왕 | 진흥왕 |
+| 특징 | 강력한 군사력 | 해상 무역 | 화랑도 |
+
+## 삼국 통일 과정
+
+1. 나당 동맹 결성 (648)
+2. 백제 멸망 (660) — 황산벌 전투, 계백 장군
+3. 고구려 멸망 (668)
+4. 매소성 전투·기벌포 전투 (676) → 당군 축출
+5. **삼국 통일 완성** (676)
+
+## 주요 문화유산
+
+- **고구려**: 광개토대왕릉비, 장군총, 무용총 벽화
+- **백제**: 금동대향로, 무령왕릉, 정림사지 5층 석탑
+- **신라**: 첨성대, 황룡사 9층 목탑, 불국사·석굴암`,
       },
       {
-        id: "ch-goryeo",
-        name: "고려",
-        items: [
-          mk("훈요10조", "태조 왕건이 후대 왕에게 남긴 정치 지침.", { mastered: 0 }),
-          mk("묘청의 서경천도운동", "1135년 김부식의 관군에 진압. 신채호 '조선역사상 일천년래 제일대사건'.", { mastered: 0, starred: true }),
-          mk("팔만대장경", "고종 때 몽골 침입 격퇴 염원. 합천 해인사 보관, 유네스코 등재.", { mastered: 0 }),
-        ],
+        id: 'c4-2', name: '고려시대', lastQuizAt: null, lastQuizScore: null,
+        description: `# 고려시대
+
+## 건국과 후삼국 통일
+
+- **왕건**: 918년 고려 건국, 송악(개경) 천도
+- **후삼국 통일**: 935년 신라 항복, 936년 후백제 멸망
+- **호족 통합 정책**: 혼인 정책, 사성(賜姓), 기인 제도
+
+## 고려의 통치 체제
+
+- **중앙**: 2성 6부 (중서문하성·상서성), 도병마사·식목도감
+- **지방**: 5도 양계, 향·부곡·소 (특수 행정 구역)
+- **과거제**: 광종 때 도입, 쌍기 건의
+
+## 고려의 위기와 극복
+
+| 사건 | 내용 |
+|------|------|
+| 거란 침입 (993~1019) | 서희 외교 담판, 강감찬 귀주대첩 |
+| 이자겸의 난 (1126) | 문벌귀족의 권력 다툼 |
+| 무신정변 (1170) | 정중부 등 무신의 권력 장악 |
+| 몽골 침입 (1231~) | 강화도 천도, 삼별초 항쟁 |
+| 공민왕 개혁 | 친원파 숙청, 쌍성총관부 수복 |
+
+## 고려 문화
+
+- **팔만대장경**: 몽골 침입 때 불력으로 극복 기원, 현재 해인사 보관
+- **직지심체요절**: 세계 최초 금속활자 인쇄본 (1377)
+- **고려청자**: 비취색 청자, 상감청자 (12세기 발전)`,
       },
     ],
   },
   {
-    id: "sub-jp",
-    name: "일본어 · JLPT N3",
-    emoji: "🇯🇵",
-    accent: "purple",
-    category: "어학",
-    description: "N3 한자 · 문법 · 청해 핵심",
-    color: "var(--purple-500)",
+    id: 's5', name: '일본어 · JLPT N3', emoji: '🇯🇵', accent: 'purple',
+    category: '어학', color: '#7c3aed',
+    description: 'JLPT N3 대비 문법 · 어휘 핵심 정리',
     chapters: [
       {
-        id: "ch-kanji",
-        name: "N3 한자",
-        items: [
-          mk("経済 (けいざい)", "경제. 経済学 경제학, 経済成長 경제성장.", { mastered: 0 }),
-          mk("政治 (せいじ)", "정치. 政治家 정치인.", { mastered: 0, starred: true }),
-          mk("環境 (かんきょう)", "환경. 環境問題 환경문제.", { mastered: 0 }),
-        ],
+        id: 'c5-1', name: 'N3 핵심 문법', lastQuizAt: null, lastQuizScore: null,
+        description: `# JLPT N3 핵심 문법
+
+## ~ている / ~てある
+
+- **~ている**: 동작의 진행 또는 상태 지속
+  - 今、本を**読んでいる**。(지금 책을 읽고 있다)
+  - 窓が**開いている**。(창문이 열려있다)
+- **~てある**: 의도적 행위의 결과 상태
+  - 予約が**してある**。(예약이 되어 있다)
+
+## ~ために / ~ように (목적)
+
+- **~ために**: 의지동사 + ために
+  - 試験に合格する**ために**、毎日勉強する。
+- **~ように**: 무의지동사·가능형 + ように
+  - 電車に乗れる**ように**、早く起きた。
+
+## 조건 표현 비교
+
+| 표현 | 용법 | 예시 |
+|-----|------|------|
+| ~ば | 가정 조건 | 安ければ買う |
+| ~たら | 완료 후 조건 | 着いたら電話して |
+| ~と | 자연 결과 | 右に曲がると駅がある |
+| ~なら | 전제 조건 | 行くなら傘を持って |
+
+## ~はず / ~べき / ~わけ
+
+- **~はず**: 당연히 그럴 것이라는 추측·기대
+- **~べき**: 의무·당연함 (~해야 한다)
+- **~わけ**: 이유·당연한 결론 (~인 셈이다)`,
       },
       {
-        id: "ch-grammar",
-        name: "N3 문법",
-        items: [
-          mk("〜ようにする", "~하도록 하다 (의식적 노력). 毎日運動するようにしている.", { mastered: 0 }),
-          mk("〜ことにする", "~하기로 하다 (자신의 결정). 来年留学することにした.", { mastered: 0 }),
-          mk("〜わけだ", "~인 셈이다, 당연하다.", { mastered: 0 }),
-        ],
+        id: 'c5-2', name: 'N3 빈출 어휘', lastQuizAt: null, lastQuizScore: null,
+        description: `# JLPT N3 빈출 어휘
+
+## 동사 (활용 주의)
+
+| 단어 | 읽기 | 의미 |
+|------|------|------|
+| 諦める | あきらめる | 포기하다 |
+| 驚く | おどろく | 놀라다 |
+| 落ち着く | おちつく | 진정하다, 안정되다 |
+| 片付ける | かたづける | 정리하다 |
+| 気がつく | きがつく | 알아채다, 깨닫다 |
+| 比べる | くらべる | 비교하다 |
+| 断る | ことわる | 거절하다 |
+
+## 혼동하기 쉬운 자동사·타동사
+
+- **始める**(시작하다) vs **始まる**(시작되다)
+- **変える**(바꾸다) vs **変わる**(바뀌다)
+- **増やす**(늘리다) vs **増える**(늘다)
+- **決める**(결정하다) vs **決まる**(결정되다)
+- **続ける**(계속하다) vs **続く**(계속되다)
+
+## 형용사
+
+| 단어 | 읽기 | 의미 |
+|------|------|------|
+| 親しい | したしい | 친하다 |
+| 珍しい | めずらしい | 드물다, 진귀하다 |
+| 悔しい | くやしい | 억울하다 |
+| 厳しい | きびしい | 엄하다, 혹독하다 |
+| 羨ましい | うらやましい | 부럽다 |`,
       },
     ],
   },
 ];
 
 export const DEFAULT_STREAK_DAYS: StreakDay[] = [
-  { d: "월", count: 12, ok: true },
-  { d: "화", count: 18, ok: true },
-  { d: "수", count: 6,  ok: true },
-  { d: "목", count: 0,  ok: false },
-  { d: "금", count: 22, ok: true },
-  { d: "토", count: 14, ok: true },
-  { d: "일", count: 9,  ok: true },
+  { d: '월', count: 12, ok: true },
+  { d: '화', count: 8, ok: true },
+  { d: '수', count: 15, ok: true },
+  { d: '목', count: 0, ok: false },
+  { d: '금', count: 10, ok: true },
+  { d: '토', count: 6, ok: true },
+  { d: '일', count: 4, ok: true },
 ];
 
 export const DEFAULT_ACTIVITY: ActivityEntry[] = [
-  { when: "방금 전", text: "운영체제 · 프로세스 챕터에서 5개 항목 학습 완료." },
-  { when: "12분 전", text: "TOEIC · implement 정답. 연속 정답 6회." },
-  { when: "1시간 전", text: "정보처리기사 챕터 1 퀴즈 결과: 8/10 (80%)." },
-  { when: "오늘 09:14", text: "AI로 '운영체제 · 동기화' 항목 12개 자동 생성." },
-  { when: "어제", text: "한국사 · 삼국시대 챕터에 항목 3개 추가." },
+  { when: '방금 전', text: '정보처리기사 · 소프트웨어 설계 퀴즈 완료 (85점)' },
+  { when: '1시간 전', text: '운영체제 · 프로세스 관리 내용 편집' },
+  { when: '어제', text: 'TOEIC Part 5 · 전치사 챕터 AI 생성' },
+  { when: '2일 전', text: '한국사 · 고려시대 퀴즈 완료 (72점)' },
+  { when: '3일 전', text: '일본어 N3 · 핵심 문법 챕터 생성' },
 ];

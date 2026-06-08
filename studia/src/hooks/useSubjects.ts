@@ -1,39 +1,38 @@
 import { useMemo } from 'react';
-import type { Subject, Totals, ReviewEntry } from '../types';
+import type { Subject, Totals, DueChapter } from '../types';
+
+const REVIEW_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export function useTotals(subjects: Subject[]): Totals {
   return useMemo(() => {
-    let items = 0, mastered = 0, learning = 0, starred = 0, totalCorrect = 0, totalWrong = 0;
-    for (const s of subjects) {
-      for (const c of s.chapters) {
-        for (const i of c.items) {
-          items++;
-          if (i.mastered === 2) mastered++;
-          if (i.mastered === 1) learning++;
-          if (i.starred) starred++;
-          totalCorrect += i.correct;
-          totalWrong   += i.wrong;
-        }
-      }
-    }
-    return { items, mastered, learning, starred, totalCorrect, totalWrong, totalAttempts: totalCorrect + totalWrong };
-  }, [subjects]);
-}
-
-export function useTodayReview(subjects: Subject[], limit = 10): ReviewEntry[] {
-  return useMemo(() => {
-    const list: ReviewEntry[] = [];
+    let chapters = 0, quizzed = 0, dueForReview = 0;
     const NOW = Date.now();
     for (const s of subjects) {
       for (const c of s.chapters) {
-        for (const i of c.items) {
-          if (i.mastered !== 2 && (i.nextReviewAt == null || i.nextReviewAt <= NOW)) {
-            list.push({ item: i, chapter: c, subject: s });
-          }
+        chapters++;
+        if (c.lastQuizAt) {
+          quizzed++;
+          if (NOW - c.lastQuizAt >= REVIEW_MS) dueForReview++;
+        } else {
+          dueForReview++;
         }
       }
     }
-    return list.slice(0, limit);
+    return { chapters, quizzed, dueForReview };
+  }, [subjects]);
+}
+
+export function useDueChapters(subjects: Subject[], limit = 10): DueChapter[] {
+  return useMemo(() => {
+    const NOW = Date.now();
+    const result: DueChapter[] = [];
+    for (const s of subjects) {
+      for (const c of s.chapters) {
+        const due = !c.lastQuizAt || (NOW - c.lastQuizAt >= REVIEW_MS);
+        if (due) result.push({ chapter: c, subject: s });
+      }
+    }
+    return result.slice(0, limit);
   }, [subjects, limit]);
 }
 

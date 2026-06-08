@@ -1,20 +1,9 @@
-export interface StudyItem {
-  id: string;
-  term: string;
-  def: string;
-  starred: boolean;
-  mastered: 0 | 1 | 2; // 0=미학습 1=학습중 2=완료
-  correct: number;
-  wrong: number;
-  lastReviewedAt: number | null;
-  nextReviewAt: number | null;
-  note: string;
-}
-
 export interface Chapter {
   id: string;
   name: string;
-  items: StudyItem[];
+  description: string;          // Markdown 형식 학습 내용 (핵심 데이터)
+  lastQuizAt?: number | null;
+  lastQuizScore?: number | null; // 0~100
 }
 
 export type AccentColor = 'purple' | 'blue' | 'green' | 'yellow' | 'red';
@@ -42,42 +31,41 @@ export interface ActivityEntry {
 }
 
 export interface Totals {
-  items: number;
-  mastered: number;
-  learning: number;
-  starred: number;
-  totalCorrect: number;
-  totalWrong: number;
-  totalAttempts: number;
+  chapters: number;
+  quizzed: number;
+  dueForReview: number;
 }
 
-export interface ReviewEntry {
-  item: StudyItem;
+export interface DueChapter {
   chapter: Chapter;
   subject: Subject;
+}
+
+export interface QuizQuestion {
+  id: string;
+  question: string;
+  options: string[];     // 4지선다 보기
+  answerIndex: number;   // 0~3
+  explanation?: string;
+  chapterId: string;
+  subjectId: string;
 }
 
 export interface QuizResult {
-  itemId: string;
+  questionId: string;
   correct: boolean;
   ms: number;
   subjectId: string;
-  grade?: 'wrong' | 'hard' | 'good';
+  chapterId: string;
 }
 
-export interface QuizPoolEntry {
-  item: StudyItem;
-  chapter: Chapter;
-  subject: Subject;
-}
-
-export type QuizPhase = 'idle' | 'setup' | 'running' | 'result';
+export type QuizPhase = 'idle' | 'setup' | 'generating' | 'running' | 'result';
 
 export interface QuizState {
   phase: QuizPhase;
-  config: { mode: 'multiple-choice' | 'flashcard' } | null;
+  config: { mode: 'multiple-choice'; count: number } | null;
+  questions: QuizQuestion[];
   results: QuizResult[];
-  pool: QuizPoolEntry[];
   presetSubjectId?: string;
   presetChapterId?: string;
 }

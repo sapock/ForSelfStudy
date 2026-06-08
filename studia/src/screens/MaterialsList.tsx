@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Icon } from '../components/ui/Icon';
 import { Button } from '../components/ui/Button';
@@ -7,7 +6,6 @@ import { Badge } from '../components/ui/Badge';
 import { Breadcrumb } from '../components/ui/Breadcrumb';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { Tabs } from '../components/ui/Tabs';
-import { StarToggle } from '../components/ui/StarToggle';
 import { KPICard } from '../components/ui/KPICard';
 import { ChapterBlock } from '../components/study/ChapterBlock';
 import { SubjectCard } from '../components/study/SubjectCard';
@@ -32,17 +30,15 @@ interface MaterialsListProps {
 
 export function MaterialsList({ subjects, filter, setFilter, view, setView, query, onOpenSubject, onStartQuiz, onAddClick }: MaterialsListProps) {
   const filtered = subjects.filter(s => {
-    const total = s.chapters.reduce((sum, c) => sum + c.items.length, 0);
-    const done  = s.chapters.reduce((sum, c) => sum + c.items.filter(i => i.mastered === 2).length, 0);
-    if (filter === 'in-progress' && (done === 0 || done === total)) return false;
-    if (filter === 'completed'   && done !== total) return false;
-    if (filter === 'starred' && !s.chapters.some(c => c.items.some(i => i.starred))) return false;
+    const quizzed = s.chapters.filter(c => c.lastQuizAt != null).length;
+    const total = s.chapters.length;
+    if (filter === 'in-progress' && (quizzed === 0 || quizzed === total)) return false;
+    if (filter === 'completed' && quizzed < total) return false;
     if (query) {
       const q = query.toLowerCase();
       const hit = s.name.toLowerCase().includes(q)
         || s.description.toLowerCase().includes(q)
-        || s.chapters.some(c => c.name.toLowerCase().includes(q)
-            || c.items.some(i => i.term.toLowerCase().includes(q) || i.def.toLowerCase().includes(q)));
+        || s.chapters.some(c => c.name.toLowerCase().includes(q) || c.description.toLowerCase().includes(q));
       if (!hit) return false;
     }
     return true;
@@ -52,7 +48,6 @@ export function MaterialsList({ subjects, filter, setFilter, view, setView, quer
     { id: 'all', label: '전체', count: subjects.length },
     { id: 'in-progress', label: '진행 중' },
     { id: 'completed', label: '완료' },
-    { id: 'starred', label: '별표 포함' },
   ];
 
   return (
@@ -60,7 +55,7 @@ export function MaterialsList({ subjects, filter, setFilter, view, setView, quer
       <div className="studia-page-header">
         <div>
           <h1 className="studia-page-title">학습 자료</h1>
-          <p className="studia-page-sub">총 {subjects.length}개 과목 · 카테고리별 정리, 챕터별 진도 확인</p>
+          <p className="studia-page-sub">총 {subjects.length}개 과목 · 챕터별 학습 내용 관리</p>
         </div>
         <div className="page-actions">
           <Button variant="outline" size="md" leadingIcon="download">내보내기</Button>
@@ -79,7 +74,6 @@ export function MaterialsList({ subjects, filter, setFilter, view, setView, quer
           <option>최근 학습순</option>
           <option>이름순</option>
           <option>진도 낮은 순</option>
-          <option>별표 많은 순</option>
         </select>
         <div style={{ display: 'inline-flex', border: '1px solid var(--gray-300)', borderRadius: 8, padding: 2 }}>
           <button onClick={() => setView('grid')} className="icon-btn"
@@ -107,16 +101,17 @@ export function MaterialsList({ subjects, filter, setFilter, view, setView, quer
               <th>과목명</th>
               <th>카테고리</th>
               <th>챕터</th>
-              <th>진도</th>
-              <th>별표</th>
+              <th>퀴즈 진도</th>
+              <th>평균 점수</th>
               <th style={{ width: 120 }}></th>
             </tr>
           </thead>
           <tbody>
             {filtered.map(s => {
-              const total = s.chapters.reduce((sum, c) => sum + c.items.length, 0);
-              const done  = s.chapters.reduce((sum, c) => sum + c.items.filter(i => i.mastered === 2).length, 0);
-              const starred = s.chapters.reduce((sum, c) => sum + c.items.filter(i => i.starred).length, 0);
+              const total = s.chapters.length;
+              const quizzed = s.chapters.filter(c => c.lastQuizAt != null).length;
+              const scored = s.chapters.filter(c => c.lastQuizScore != null);
+              const avg = scored.length > 0 ? Math.round(scored.reduce((a, c) => a + (c.lastQuizScore ?? 0), 0) / scored.length) : null;
               return (
                 <tr key={s.id} onClick={() => onOpenSubject(s.id)}>
                   <td><span style={{ fontSize: 18 }}>{s.emoji}</span></td>
@@ -125,19 +120,22 @@ export function MaterialsList({ subjects, filter, setFilter, view, setView, quer
                     <div className="muted" style={{ fontSize: 11 }}>{s.description}</div>
                   </td>
                   <td>{s.category}</td>
-                  <td>{s.chapters.length}</td>
+                  <td>{total}</td>
                   <td style={{ width: 200 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <ProgressBar value={done} total={total} tone={s.accent} showLabel={false} height={6} />
-                      <span className="mono" style={{ fontSize: 11, color: 'var(--gray-500)' }}>{done}/{total}</span>
+                      <ProgressBar value={quizzed} total={total} tone={s.accent} showLabel={false} height={6} />
+                      <span className="mono" style={{ fontSize: 11, color: 'var(--gray-500)' }}>{quizzed}/{total}</span>
                     </div>
                   </td>
                   <td>
-                    <Icon name="star" size={12} style={{ color: 'var(--yellow-500)', verticalAlign: '-2px', marginRight: 4 }} />
-                    {starred}
+                    {avg !== null ? (
+                      <span style={{ color: avg >= 80 ? 'var(--green-700)' : avg >= 60 ? 'var(--yellow-700)' : 'var(--red-700)', fontWeight: 600 }}>
+                        {avg}점
+                      </span>
+                    ) : <span className="muted">-</span>}
                   </td>
                   <td>
-                    <Button variant="outline" size="sm" leadingIcon="play" onClick={e => { e.stopPropagation(); onStartQuiz(s.id); }}>학습</Button>
+                    <Button variant="outline" size="sm" leadingIcon="zap" onClick={e => { e.stopPropagation(); onStartQuiz(s.id); }}>퀴즈</Button>
                   </td>
                 </tr>
               );
@@ -167,36 +165,24 @@ interface SubjectDetailProps {
   query: string;
 }
 
-export function SubjectDetail({ subject, onBack, onUpdate, onStartQuiz, onAddClick, query }: SubjectDetailProps) {
+export function SubjectDetail({ subject, onBack, onUpdate, onStartQuiz, onAddClick }: SubjectDetailProps) {
   const [tab, setTab] = useState('chapters');
 
-  const totalItems = subject.chapters.reduce((s, c) => s + c.items.length, 0);
-  const doneItems  = subject.chapters.reduce((s, c) => s + c.items.filter(i => i.mastered === 2).length, 0);
-  const starredItems = subject.chapters.reduce((s, c) => s + c.items.filter(i => i.starred).length, 0);
-  const learningItems = subject.chapters.reduce((s, c) => s + c.items.filter(i => i.mastered === 1).length, 0);
-
-  function toggleStar(itemId: string) {
-    onUpdate(subject.id, draft => {
-      for (const c of draft.chapters) for (const i of c.items) if (i.id === itemId) { i.starred = !i.starred; return; }
-    });
-  }
-  function cycleMastered(itemId: string) {
-    onUpdate(subject.id, draft => {
-      for (const c of draft.chapters) for (const i of c.items) if (i.id === itemId) { i.mastered = ((i.mastered + 1) % 3) as 0|1|2; return; }
-    });
-  }
-  function updateItem(itemId: string, changes: { term?: string; def?: string; note?: string }) {
-    onUpdate(subject.id, draft => {
-      for (const c of draft.chapters) for (const i of c.items) if (i.id === itemId) { Object.assign(i, changes); return; }
-    });
-  }
-
-  const allItems = subject.chapters.flatMap(c => c.items.map(i => ({ item: i, chapter: c })));
-  const filteredAll = query ? allItems.filter(({ item }) =>
-    item.term.toLowerCase().includes(query.toLowerCase()) ||
-    item.def.toLowerCase().includes(query.toLowerCase())) : allItems;
-  const starredOnly = allItems.filter(({ item }) => item.starred);
+  const totalChapters = subject.chapters.length;
+  const quizzedChapters = subject.chapters.filter(c => c.lastQuizAt != null).length;
+  const scoredChapters = subject.chapters.filter(c => c.lastQuizScore != null);
+  const avgScore = scoredChapters.length > 0
+    ? Math.round(scoredChapters.reduce((s, c) => s + (c.lastQuizScore ?? 0), 0) / scoredChapters.length)
+    : null;
+  const hasContent = subject.chapters.filter(c => c.description).length;
   const tone = ACCENT_TONE[subject.accent] ?? 'primary';
+
+  function updateDescription(chapterId: string, description: string) {
+    onUpdate(subject.id, draft => {
+      const c = draft.chapters.find(c => c.id === chapterId);
+      if (c) c.description = description;
+    });
+  }
 
   return (
     <div className="main-inner">
@@ -209,31 +195,28 @@ export function SubjectDetail({ subject, onBack, onUpdate, onStartQuiz, onAddCli
           <div>
             <div className="row" style={{ gap: 8, marginBottom: 4 }}>
               <Badge tone="neutral">{subject.category}</Badge>
-              <Badge tone={tone}>{subject.chapters.length}챕터</Badge>
+              <Badge tone={tone}>{totalChapters}챕터</Badge>
             </div>
             <h1 className="studia-page-title" style={{ fontSize: 30, lineHeight: '38px' }}>{subject.name}</h1>
             <p className="studia-page-sub">{subject.description}</p>
           </div>
         </div>
         <div className="page-actions">
-          <Button variant="outline" size="md" leadingIcon="pencil">편집</Button>
           <Button variant="outline" size="md" leadingIcon="plus" onClick={onAddClick}>챕터 추가</Button>
-          <Button variant="solid-primary" size="md" leadingIcon="play" onClick={() => onStartQuiz(subject.id)}>전체 퀴즈 시작</Button>
+          <Button variant="solid-primary" size="md" leadingIcon="zap" onClick={() => onStartQuiz(subject.id)}>전체 퀴즈 시작</Button>
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
-        <KPICard label="전체 항목" value={String(totalItems)} delta={`${subject.chapters.length}챕터`} deltaDir="up" />
-        <KPICard label="완료" value={String(doneItems)} delta={`${Math.round((doneItems/totalItems)*100)}%`} deltaDir="up" />
-        <KPICard label="학습 중" value={String(learningItems)} delta="우선 복습" deltaDir="up" />
-        <KPICard label="별표" value={String(starredItems)} delta="중요 표시" deltaDir="up" />
+        <KPICard label="전체 챕터" value={String(totalChapters)} delta="학습 단원 수" deltaDir="up" />
+        <KPICard label="퀴즈 완료" value={String(quizzedChapters)} delta={`${Math.round((quizzedChapters / totalChapters) * 100)}%`} deltaDir="up" />
+        <KPICard label="내용 작성" value={String(hasContent)} delta={`${totalChapters - hasContent}개 미작성`} deltaDir="up" />
+        <KPICard label="평균 점수" value={avgScore !== null ? `${avgScore}점` : '-'} delta="최근 퀴즈 기준" deltaDir="up" />
       </div>
 
       <Tabs
         items={[
-          { id: 'chapters', label: '챕터별', count: subject.chapters.length },
-          { id: 'all', label: '모든 항목', count: totalItems },
-          { id: 'starred', label: '별표만', count: starredItems },
+          { id: 'chapters', label: '챕터 목록', count: totalChapters },
           { id: 'notes', label: '메모' },
         ]}
         value={tab} onChange={setTab}
@@ -242,69 +225,17 @@ export function SubjectDetail({ subject, onBack, onUpdate, onStartQuiz, onAddCli
       {tab === 'chapters' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {subject.chapters.map(c => (
-            <ChapterBlock key={c.id} chapter={c}
-                          onToggleStar={toggleStar}
-                          onCycleMastered={cycleMastered}
-                          onUpdateItem={updateItem}
-                          onQuiz={() => onStartQuiz(subject.id, c.id)} />
+            <ChapterBlock
+              key={c.id}
+              chapter={c}
+              subjectName={subject.name}
+              onQuiz={() => onStartQuiz(subject.id, c.id)}
+              onUpdateDescription={desc => updateDescription(c.id, desc)}
+            />
           ))}
-          <button className="btn outline md" style={{ alignSelf: 'flex-start', marginTop: 8 }}>
+          <button className="btn outline md" style={{ alignSelf: 'flex-start', marginTop: 8 }} onClick={onAddClick}>
             <Icon name="plus" size={16} />챕터 추가
           </button>
-        </div>
-      )}
-
-      {tab === 'all' && (
-        <div className="ch-block">
-          <div className="ch-items">
-            {filteredAll.map(({ item, chapter }) => (
-              <div key={item.id} className="item-row">
-                <StarToggle on={item.starred} onClick={() => toggleStar(item.id)} />
-                <button className={`item-state s${item.mastered}`} onClick={() => cycleMastered(item.id)}
-                        title={['미학습','학습중','완료'][item.mastered]}>
-                  {item.mastered === 2 && <Icon name="check" size={12} />}
-                  {item.mastered === 1 && <span className="dot-half" />}
-                </button>
-                <div className="item-main">
-                  <div className="row" style={{ gap: 6, marginBottom: 2 }}>
-                    <span className="mono" style={{ fontSize: 11, color: 'var(--gray-500)' }}>{chapter.name}</span>
-                  </div>
-                  <div className="item-term">{item.term}</div>
-                  <div className="item-def">{item.def}</div>
-                </div>
-                <div className="item-stats">
-                  {item.correct > 0 && <span className="stat ok">정 {item.correct}</span>}
-                  {item.wrong > 0   && <span className="stat ng">오 {item.wrong}</span>}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {tab === 'starred' && (
-        <div className="ch-block">
-          <div className="ch-items">
-            {starredOnly.length === 0 ? (
-              <div style={{ padding: 48, textAlign: 'center', color: 'var(--gray-500)' }}>
-                <Icon name="star" size={28} style={{ color: 'var(--gray-300)', marginBottom: 8 }} />
-                <div>별표 표시한 항목이 없어요. 항목 옆 ⭐로 표시해보세요.</div>
-              </div>
-            ) : starredOnly.map(({ item, chapter }) => (
-              <div key={item.id} className="item-row">
-                <StarToggle on={item.starred} onClick={() => toggleStar(item.id)} />
-                <button className={`item-state s${item.mastered}`} onClick={() => cycleMastered(item.id)}>
-                  {item.mastered === 2 && <Icon name="check" size={12} />}
-                  {item.mastered === 1 && <span className="dot-half" />}
-                </button>
-                <div className="item-main">
-                  <span className="mono" style={{ fontSize: 11, color: 'var(--gray-500)' }}>{chapter.name}</span>
-                  <div className="item-term">{item.term}</div>
-                  <div className="item-def">{item.def}</div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       )}
 

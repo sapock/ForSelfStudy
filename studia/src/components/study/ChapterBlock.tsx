@@ -1,143 +1,81 @@
 import { useState } from 'react';
 import { Icon } from '../ui/Icon';
 import { Badge } from '../ui/Badge';
-import { ProgressBar } from '../ui/ProgressBar';
-import { StarToggle } from '../ui/StarToggle';
 import { Button } from '../ui/Button';
-import type { Chapter, StudyItem } from '../../types';
+import { MarkdownViewer } from '../ui/MarkdownViewer';
+import type { Chapter } from '../../types';
 
 interface ChapterBlockProps {
   chapter: Chapter;
-  onToggleStar: (itemId: string) => void;
-  onCycleMastered: (itemId: string) => void;
-  onUpdateItem: (itemId: string, changes: Partial<Pick<StudyItem, 'term' | 'def' | 'note'>>) => void;
+  subjectName: string;
   onQuiz: () => void;
+  onUpdateDescription: (description: string) => void;
 }
 
-interface ItemDetailModalProps {
-  item: StudyItem;
-  onClose: () => void;
-  onToggleStar: () => void;
-  onCycleMastered: () => void;
-  onUpdate: (changes: Partial<Pick<StudyItem, 'term' | 'def' | 'note'>>) => void;
-}
-
-function ItemDetailModal({ item, onClose, onToggleStar, onCycleMastered, onUpdate }: ItemDetailModalProps) {
+export function ChapterBlock({ chapter, subjectName, onQuiz, onUpdateDescription }: ChapterBlockProps) {
+  const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [term, setTerm] = useState(item.term);
-  const [def, setDef] = useState(item.def);
-  const [note, setNote] = useState(item.note || '');
+  const [draft, setDraft] = useState(chapter.description);
+  const [generating, setGenerating] = useState(false);
+  const [genError, setGenError] = useState<string | null>(null);
 
-  function save() {
-    onUpdate({ term: term.trim(), def: def.trim(), note: note.trim() });
+  function openEdit() {
+    setDraft(chapter.description);
+    setEditing(true);
+    if (!open) setOpen(true);
+  }
+
+  function saveEdit() {
+    onUpdateDescription(draft);
     setEditing(false);
   }
 
-  function cancel() {
-    setTerm(item.term);
-    setDef(item.def);
-    setNote(item.note || '');
+  function cancelEdit() {
+    setDraft(chapter.description);
     setEditing(false);
   }
 
-  const masteryLabel = ['미학습', '학습 중', '완료'][item.mastered];
-  const masteryColor = ['var(--gray-400)', 'var(--yellow-600)', 'var(--green-600)'][item.mastered];
+  async function aiGenerate() {
+    setGenerating(true);
+    setGenError(null);
+    if (!open) setOpen(true);
+    try {
+      const prompt = `당신은 학습 자료 전문 작성자입니다. 다음 챕터에 대한 상세한 학습 노트를 한국어 Markdown 형식으로 작성해주세요.
 
-  return (
-    <div className="modal-scrim" onClick={onClose}>
-      <div className="modal" style={{ width: 560 }} onClick={e => e.stopPropagation()}>
-        {/* Header */}
-        <div className="modal-head">
-          <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-            <StarToggle on={item.starred} onClick={onToggleStar} />
-            <span style={{ font: '500 12px/16px var(--font-mono)', color: masteryColor }}>
-              {masteryLabel}
-            </span>
-            {item.correct > 0 && <span className="stat ok" style={{ font: '600 11px/16px var(--font-mono)', padding: '1px 6px', borderRadius: 1000, background: 'var(--green-50)', color: 'var(--green-700)' }}>정 {item.correct}</span>}
-            {item.wrong > 0 && <span className="stat ng" style={{ font: '600 11px/16px var(--font-mono)', padding: '1px 6px', borderRadius: 1000, background: 'var(--red-50)', color: 'var(--red-700)' }}>오 {item.wrong}</span>}
-          </div>
-          <div className="row" style={{ gap: 8 }}>
-            {!editing && (
-              <button className="btn sm outline" onClick={() => setEditing(true)}>
-                <Icon name="pencil" size={13} />편집
-              </button>
-            )}
-            <button className="icon-btn" onClick={onClose}><Icon name="x" size={18} /></button>
-          </div>
-        </div>
+과목: ${subjectName}
+챕터: ${chapter.name}
 
-        {/* Body */}
-        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {editing ? (
-            <>
-              <div>
-                <label className="field-label">용어 / 문제</label>
-                <input className="text-input" value={term} onChange={e => setTerm(e.target.value)}
-                       placeholder="용어 또는 문제를 입력하세요" />
-              </div>
-              <div>
-                <label className="field-label">정의 / 답</label>
-                <textarea className="textarea" value={def} onChange={e => setDef(e.target.value)}
-                          placeholder="정의 또는 답을 입력하세요" style={{ minHeight: 100 }} />
-              </div>
-              <div>
-                <label className="field-label">메모 (선택)</label>
-                <textarea className="textarea" value={note} onChange={e => setNote(e.target.value)}
-                          placeholder="추가 메모나 예문을 입력하세요" style={{ minHeight: 64 }} />
-              </div>
-              <div className="row" style={{ gap: 8, justifyContent: 'flex-end' }}>
-                <Button variant="outline" size="md" onClick={cancel}>취소</Button>
-                <Button variant="solid-primary" size="md" leadingIcon="check" onClick={save}>저장</Button>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Term */}
-              <div>
-                <div className="muted" style={{ font: '500 11px/14px var(--font-mono)', textTransform: 'uppercase', marginBottom: 6 }}>용어 / 문제</div>
-                <div style={{ font: '700 20px/30px var(--font-sans)', color: 'var(--gray-900)' }}>{item.term}</div>
-              </div>
+다음 내용을 포함하세요:
+- 핵심 개념 설명
+- 주요 용어 정의
+- 적절한 경우 표(table) 사용
+- 관련된 경우 코드 예시 포함
+- 요약 정리
 
-              {/* Def */}
-              <div style={{ borderTop: '1px solid var(--gray-100)', paddingTop: 16 }}>
-                <div className="muted" style={{ font: '500 11px/14px var(--font-mono)', textTransform: 'uppercase', marginBottom: 6 }}>정의 / 답</div>
-                <div style={{ font: '400 15px/24px var(--font-sans)', color: 'var(--gray-800)', whiteSpace: 'pre-wrap' }}>{item.def}</div>
-              </div>
+한국어로 작성하고 시험에 도움이 될 만큼 상세하게 작성하세요. Markdown 내용만 출력하고 서문은 쓰지 마세요.`;
 
-              {/* Note */}
-              {item.note && (
-                <div style={{ borderTop: '1px solid var(--gray-100)', paddingTop: 16 }}>
-                  <div className="muted" style={{ font: '500 11px/14px var(--font-mono)', textTransform: 'uppercase', marginBottom: 6 }}>메모</div>
-                  <div style={{ font: '400 13px/22px var(--font-sans)', color: 'var(--gray-600)', whiteSpace: 'pre-wrap' }}>{item.note}</div>
-                </div>
-              )}
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
+      const { text } = await res.json();
+      onUpdateDescription(text.trim());
+    } catch (e) {
+      setGenError((e as Error).message || 'AI 생성 중 오류가 발생했어요.');
+    } finally {
+      setGenerating(false);
+    }
+  }
 
-              {/* Mastery buttons */}
-              <div style={{ borderTop: '1px solid var(--gray-100)', paddingTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="muted" style={{ fontSize: 12 }}>학습 상태 변경</span>
-                <button
-                  className={`btn sm outline item-state-btn`}
-                  onClick={onCycleMastered}
-                  style={{ color: masteryColor, borderColor: masteryColor }}
-                >
-                  <Icon name={item.mastered === 2 ? 'check-circle' : item.mastered === 1 ? 'circle-half' : 'circle'} size={13} />
-                  {masteryLabel} → {['학습 중', '완료', '미학습'][item.mastered]}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function ChapterBlock({ chapter, onToggleStar, onCycleMastered, onUpdateItem, onQuiz }: ChapterBlockProps) {
-  const [open, setOpen] = useState(true);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const total = chapter.items.length;
-  const done = chapter.items.filter(i => i.mastered === 2).length;
-  const selectedItem = chapter.items.find(i => i.id === selectedId);
+  const score = chapter.lastQuizScore;
+  const scoreColor = score != null
+    ? score >= 80 ? 'var(--green-700)' : score >= 60 ? 'var(--yellow-700)' : 'var(--red-700)'
+    : null;
+  const scoreBg = score != null
+    ? score >= 80 ? 'var(--green-50)' : score >= 60 ? 'var(--yellow-50)' : 'var(--red-50)'
+    : null;
 
   return (
     <div className="ch-block">
@@ -145,56 +83,73 @@ export function ChapterBlock({ chapter, onToggleStar, onCycleMastered, onUpdateI
         <div className="row" style={{ gap: 10, flex: 1, minWidth: 0 }}>
           <Icon name={open ? 'chevron-down' : 'chevron-right'} size={16} />
           <div className="ch-name">{chapter.name}</div>
-          <Badge tone="neutral">{done}/{total}</Badge>
+          {scoreColor && (
+            <span style={{ font: '600 11px/16px var(--font-mono)', color: scoreColor, background: scoreBg!, padding: '1px 8px', borderRadius: 1000 }}>
+              최근 {score}점
+            </span>
+          )}
+          {!chapter.description && <Badge tone="neutral">미작성</Badge>}
         </div>
-        <div className="row" style={{ gap: 8 }}>
-          <div style={{ width: 120 }}>
-            <ProgressBar value={done} total={total} tone="primary" showLabel={false} height={6} />
-          </div>
-          <button className="btn sm outline" onClick={e => { e.stopPropagation(); onQuiz(); }}>
-            <Icon name="zap" size={12} />챕터 퀴즈
-          </button>
+        <div className="row" style={{ gap: 6 }} onClick={e => e.stopPropagation()}>
+          <Button variant="ghost" size="sm" leadingIcon="pencil" onClick={openEdit}>편집</Button>
+          <Button variant="ghost" size="sm" leadingIcon="sparkles" onClick={aiGenerate} disabled={generating}>
+            {generating ? 'AI 생성 중...' : 'AI 생성'}
+          </Button>
+          <Button variant="outline" size="sm" leadingIcon="zap" onClick={e => { e.stopPropagation(); onQuiz(); }}>
+            챕터 퀴즈
+          </Button>
         </div>
       </div>
+
       {open && (
-        <div className="ch-items">
-          {chapter.items.map(item => (
-            <div key={item.id} className="item-row" style={{ cursor: 'pointer' }}
-                 onClick={() => setSelectedId(item.id)}>
-              <StarToggle on={item.starred} onClick={e => { e?.stopPropagation(); onToggleStar(item.id); }} />
-              <button
-                className={`item-state s${item.mastered}`}
-                onClick={e => { e.stopPropagation(); onCycleMastered(item.id); }}
-                title={['미학습', '학습중', '완료'][item.mastered]}
-              >
-                {item.mastered === 2 && <Icon name="check" size={12} />}
-                {item.mastered === 1 && <span className="dot-half" />}
-              </button>
-              <div className="item-main">
-                <div className="item-term">{item.term}</div>
-                <div className="item-def">{item.def}</div>
-              </div>
-              <div className="item-stats">
-                {item.correct > 0 && <span className="stat ok">정 {item.correct}</span>}
-                {item.wrong > 0 && <span className="stat ng">오 {item.wrong}</span>}
-                <Icon name="chevron-right" size={14} style={{ color: 'var(--gray-400)', marginLeft: 4 }} />
+        <div className="ch-desc-body">
+          {editing ? (
+            <div style={{ padding: 20 }}>
+              <textarea
+                className="textarea"
+                value={draft}
+                onChange={e => setDraft(e.target.value)}
+                placeholder="Markdown 형식으로 학습 내용을 작성하세요...&#10;&#10;예시:&#10;## 핵심 개념&#10;- 개념 1: 설명&#10;- 개념 2: 설명&#10;&#10;## 주요 용어&#10;| 용어 | 설명 |&#10;|---|---|&#10;| 용어1 | 설명1 |"
+                style={{ minHeight: 360, fontFamily: 'var(--font-mono)', fontSize: 13, lineHeight: '20px' }}
+              />
+              <div className="row" style={{ gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
+                <Button variant="outline" size="md" onClick={cancelEdit}>취소</Button>
+                <Button variant="solid-primary" size="md" leadingIcon="check" onClick={saveEdit}>저장</Button>
               </div>
             </div>
-          ))}
-          <button className="add-item-row">
-            <Icon name="plus" size={14} />이 챕터에 항목 추가
-          </button>
-        </div>
-      )}
+          ) : chapter.description ? (
+            <div style={{ padding: 24 }}>
+              <MarkdownViewer content={chapter.description} />
+            </div>
+          ) : (
+            <div style={{ padding: 48, textAlign: 'center', color: 'var(--gray-500)' }}>
+              <Icon name="file-text" size={28} style={{ color: 'var(--gray-300)', marginBottom: 10 }} />
+              <div style={{ font: '600 14px/20px var(--font-sans)', color: 'var(--gray-700)', marginBottom: 4 }}>
+                학습 내용이 없어요
+              </div>
+              <div style={{ fontSize: 13, marginBottom: 20 }}>직접 작성하거나 AI로 자동 생성하세요.</div>
+              <div className="row" style={{ gap: 8, justifyContent: 'center' }}>
+                <Button variant="outline" size="md" leadingIcon="pencil" onClick={openEdit}>직접 작성</Button>
+                <Button variant="solid-primary" size="md" leadingIcon="sparkles" onClick={aiGenerate} disabled={generating}>
+                  AI로 생성
+                </Button>
+              </div>
+            </div>
+          )}
 
-      {selectedItem && (
-        <ItemDetailModal
-          item={selectedItem}
-          onClose={() => setSelectedId(null)}
-          onToggleStar={() => onToggleStar(selectedItem.id)}
-          onCycleMastered={() => { onCycleMastered(selectedItem.id); }}
-          onUpdate={changes => onUpdateItem(selectedItem.id, changes)}
-        />
+          {generating && (
+            <div className="ai-thinking" style={{ margin: '0 20px 20px' }}>
+              <div className="ai-spinner" />
+              AI가 학습 내용을 작성하고 있어요… 잠시만 기다려주세요.
+            </div>
+          )}
+          {genError && (
+            <div style={{ margin: '0 20px 20px', padding: 10, background: 'var(--red-50)', color: 'var(--red-700)', borderRadius: 8, fontSize: 13 }}>
+              <Icon name="alert-triangle" size={14} style={{ verticalAlign: '-2px', marginRight: 4 }} />
+              {genError}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
