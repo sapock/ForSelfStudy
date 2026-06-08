@@ -185,6 +185,11 @@ export function SubjectDetail({ subject, onBack, onUpdate, onStartQuiz, onAddCli
       for (const c of draft.chapters) for (const i of c.items) if (i.id === itemId) { i.mastered = ((i.mastered + 1) % 3) as 0|1|2; return; }
     });
   }
+  function updateItem(itemId: string, changes: { term?: string; def?: string; note?: string }) {
+    onUpdate(subject.id, draft => {
+      for (const c of draft.chapters) for (const i of c.items) if (i.id === itemId) { Object.assign(i, changes); return; }
+    });
+  }
 
   const allItems = subject.chapters.flatMap(c => c.items.map(i => ({ item: i, chapter: c })));
   const filteredAll = query ? allItems.filter(({ item }) =>
@@ -240,6 +245,7 @@ export function SubjectDetail({ subject, onBack, onUpdate, onStartQuiz, onAddCli
             <ChapterBlock key={c.id} chapter={c}
                           onToggleStar={toggleStar}
                           onCycleMastered={cycleMastered}
+                          onUpdateItem={updateItem}
                           onQuiz={() => onStartQuiz(subject.id, c.id)} />
           ))}
           <button className="btn outline md" style={{ alignSelf: 'flex-start', marginTop: 8 }}>
