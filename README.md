@@ -96,7 +96,12 @@ npm run electron:build:linux
 
 ```
 ForSelfStudy/
-└── studia/                  # 앱 소스
+├── project/                 # ⚠️ 원본 디자인 프로토타입 (참고용, 실행 불가)
+│   ├── Studia 학습 앱.html  # Claude Design에서 작업한 디자인 원본 HTML
+│   ├── app/                 # 프로토타입용 JSX 컴포넌트 (CDN 기반, 브라우저 전용)
+│   └── opus/                # OPUS-X 디자인 시스템 CSS 원본
+│
+└── studia/                  # ✅ 실제 앱 소스 (여기서 작업하세요)
     ├── src/
     │   ├── components/      # UI 컴포넌트 (버튼, 모달, 아이콘 등)
     │   ├── screens/         # 화면 단위 컴포넌트 (대시보드, 퀴즈, 통계)
@@ -107,6 +112,14 @@ ForSelfStudy/
     ├── electron/            # Electron 데스크톱 앱 진입점
     └── public/              # 폰트, 아이콘 등 정적 파일
 ```
+
+> **`project/`와 `studia/`의 차이**
+>
+> `project/` 폴더는 Claude Design(AI 디자인 도구)에서 목업을 만들고 내보낸 **설계 도면**입니다.
+> 브라우저 CDN 기반의 JSX 파일로 구성되어 있어 Vite/TypeScript 환경에서 직접 import해서 사용할 수 없습니다.
+>
+> `studia/` 폴더는 `project/`의 디자인을 바탕으로 **React + TypeScript + Vite로 새로 구현한 실제 앱**입니다.
+> 개발, 빌드, 배포 등 모든 작업은 `studia/` 폴더에서 진행합니다.
 
 ---
 
