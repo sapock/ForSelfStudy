@@ -1,4 +1,3 @@
-
 import { Icon } from '../ui/Icon';
 import { Badge } from '../ui/Badge';
 import { ProgressBar } from '../ui/ProgressBar';
@@ -15,10 +14,14 @@ interface SubjectCardProps {
 }
 
 export function SubjectCard({ subject, onClick, onStartQuiz }: SubjectCardProps) {
-  const total = subject.chapters.reduce((s, c) => s + c.items.length, 0);
-  const done = subject.chapters.reduce((s, c) => s + c.items.filter(i => i.mastered === 2).length, 0);
-  const starred = subject.chapters.reduce((s, c) => s + c.items.filter(i => i.starred).length, 0);
+  const total = subject.chapters.length;
+  const quizzed = subject.chapters.filter(c => c.lastQuizAt != null).length;
+  const scoredChapters = subject.chapters.filter(c => c.lastQuizScore != null);
+  const avgScore = scoredChapters.length > 0
+    ? Math.round(scoredChapters.reduce((s, c) => s + (c.lastQuizScore ?? 0), 0) / scoredChapters.length)
+    : null;
   const tone = ACCENT_TONE[subject.accent] ?? 'primary';
+
   return (
     <div className="subj-card" onClick={onClick}>
       <div className="subj-card-head">
@@ -29,19 +32,21 @@ export function SubjectCard({ subject, onClick, onStartQuiz }: SubjectCardProps)
           <div className="subj-cat">{subject.category}</div>
           <div className="subj-name">{subject.name}</div>
         </div>
-        <Badge tone={tone}>{subject.chapters.length}챕터</Badge>
+        <Badge tone={tone}>{total}챕터</Badge>
       </div>
       <div className="subj-desc">{subject.description}</div>
-      <ProgressBar value={done} total={total} tone={subject.accent} />
+      <ProgressBar value={quizzed} total={total} tone={subject.accent} />
       <div className="subj-foot">
         <div className="row" style={{ gap: 14 }}>
+          {avgScore !== null && (
+            <span className="muted" style={{ fontSize: 12 }}>
+              <Icon name="target" size={12} style={{ verticalAlign: '-2px', marginRight: 3, color: `var(--${subject.accent}-600)` }} />
+              평균 {avgScore}점
+            </span>
+          )}
           <span className="muted" style={{ fontSize: 12 }}>
-            <Icon name="star" size={12} style={{ verticalAlign: '-2px', marginRight: 3, color: 'var(--yellow-600)' }} />
-            {starred}
-          </span>
-          <span className="muted" style={{ fontSize: 12 }}>
-            <Icon name="list" size={12} style={{ verticalAlign: '-2px', marginRight: 3 }} />
-            {total}개
+            <Icon name="list-checks" size={12} style={{ verticalAlign: '-2px', marginRight: 3 }} />
+            {quizzed}/{total} 퀴즈 완료
           </span>
         </div>
         <button className="btn sm ghost" onClick={e => { e.stopPropagation(); onStartQuiz(); }}>

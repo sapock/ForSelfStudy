@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Chip } from '../../components/ui/Chip';
-import { Icon } from '../../components/ui/Icon';
 import type { Subject } from '../../types';
 
 interface CreatePayload {
@@ -10,7 +9,7 @@ interface CreatePayload {
   subjectName: string;
   chapterName: string;
   emoji?: string;
-  items: { term: string; def: string }[];
+  description: string;
 }
 
 interface ManualFormProps {
@@ -25,18 +24,11 @@ export function ManualForm({ onCreate, onClose, subjects }: ManualFormProps) {
   const [subjName, setSubjName] = useState('');
   const [chName, setChName] = useState('');
   const [emoji, setEmoji] = useState('📚');
-  const [items, setItems] = useState([{ term: '', def: '' }]);
-
-  function add() { setItems([...items, { term: '', def: '' }]); }
-  function setItem(i: number, key: 'term'|'def', v: string) {
-    const next = [...items]; next[i] = { ...next[i], [key]: v }; setItems(next);
-  }
-  function removeItem(i: number) { setItems(items.filter((_, idx) => idx !== i)); }
+  const [description, setDescription] = useState('');
 
   function commit() {
-    const validItems = items.filter(x => x.term.trim());
-    if (validItems.length === 0) return;
-    onCreate({ target, targetSub, subjectName: subjName || '새 과목', chapterName: chName || '새 챕터', emoji, items: validItems });
+    if (!chName.trim()) return;
+    onCreate({ target, targetSub, subjectName: subjName || '새 과목', chapterName: chName, emoji, description });
     onClose();
   }
 
@@ -71,32 +63,25 @@ export function ManualForm({ onCreate, onClose, subjects }: ManualFormProps) {
         </div>
       )}
 
-      <label className="field-label">챕터 이름</label>
-      <input className="text-input" value={chName} onChange={e => setChName(e.target.value)}
-             placeholder="예: 1과목 · 데이터 모델링" />
-
-      <div className="row between" style={{ marginTop: 18, marginBottom: 8 }}>
-        <label className="field-label" style={{ margin: 0 }}>항목 · {items.length}개</label>
-        <Button variant="ghost" size="sm" leadingIcon="plus" onClick={add}>항목 추가</Button>
+      <div style={{ marginBottom: 14 }}>
+        <label className="field-label">챕터 이름</label>
+        <input className="text-input" value={chName} onChange={e => setChName(e.target.value)}
+               placeholder="예: 1과목 · 데이터 모델링" />
       </div>
 
-      <div style={{ maxHeight: 280, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {items.map((it, i) => (
-          <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 28px', gap: 6, alignItems: 'start' }}>
-            <input className="text-input" placeholder="용어/문제" value={it.term}
-                   onChange={e => setItem(i, 'term', e.target.value)} />
-            <input className="text-input" placeholder="정의/답" value={it.def}
-                   onChange={e => setItem(i, 'def', e.target.value)} />
-            <button className="icon-btn" onClick={() => removeItem(i)} aria-label="삭제">
-              <Icon name="trash-2" size={14} />
-            </button>
-          </div>
-        ))}
+      <div>
+        <label className="field-label">학습 내용 (Markdown)</label>
+        <textarea className="textarea" value={description} onChange={e => setDescription(e.target.value)}
+                  placeholder={'Markdown 형식으로 학습 내용을 작성하세요.\n\n예시:\n## 핵심 개념\n- 개념 1: 설명\n\n## 주요 용어\n| 용어 | 설명 |\n|---|---|\n| 용어1 | 설명1 |'}
+                  style={{ minHeight: 240, fontFamily: 'var(--font-mono)', fontSize: 13, lineHeight: '20px' }} />
+        <div className="muted" style={{ font: '400 11px/16px var(--font-sans)', marginTop: 4 }}>
+          나중에 챕터 상세 화면에서 언제든 수정할 수 있어요.
+        </div>
       </div>
 
       <div className="row" style={{ gap: 8, justifyContent: 'flex-end', marginTop: 20 }}>
         <Button variant="outline" size="md" onClick={onClose}>취소</Button>
-        <Button variant="solid-primary" size="md" leadingIcon="check" onClick={commit}>저장</Button>
+        <Button variant="solid-primary" size="md" leadingIcon="check" onClick={commit} disabled={!chName.trim()}>저장</Button>
       </div>
     </div>
   );

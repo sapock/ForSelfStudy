@@ -1,30 +1,29 @@
-
 import { Button } from '../../components/ui/Button';
 import { Ring } from '../../components/ui/Ring';
-import type { QuizResult, QuizPoolEntry } from '../../types';
+import type { QuizResult, QuizQuestion } from '../../types';
 
 interface QuizResultProps {
   results: QuizResult[];
-  pool: QuizPoolEntry[];
+  questions: QuizQuestion[];
   onRetry: () => void;
   onDone: () => void;
-  onReviewWrong: (ids: string[]) => void;
 }
 
-export function QuizResult({ results, pool, onRetry, onDone, onReviewWrong }: QuizResultProps) {
+export function QuizResult({ results, questions, onRetry, onDone }: QuizResultProps) {
   const total = results.length;
   const correct = results.filter(r => r.correct).length;
-  const pct = Math.round((correct / total) * 100);
+  const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
   const avgMs = results.length ? Math.round(results.reduce((s, r) => s + r.ms, 0) / results.length / 100) / 10 : 0;
-  const wrong = results.filter(r => !r.correct);
 
   const message =
     pct === 100 ? '완벽해요! 다음 챕터로 넘어가도 좋아요.' :
-    pct >= 80   ? '잘 하셨어요! 틀린 문제만 다시 풀어볼까요?' :
-    pct >= 60   ? '괜찮은 출발이에요. 별표로 표시하고 복습해보세요.' :
-                  '조금 더 익숙해질 시간이 필요해요. 플래시카드로 복습해보세요.';
+    pct >= 80   ? '잘 하셨어요! 틀린 문제만 한 번 더 확인해보세요.' :
+    pct >= 60   ? '괜찮은 출발이에요. 학습 내용을 다시 읽어보세요.' :
+                  '조금 더 익숙해질 시간이 필요해요. 내용을 복습하고 다시 도전해보세요.';
 
   const ringColor = pct >= 80 ? 'var(--green-600)' : pct >= 60 ? 'var(--yellow-600)' : 'var(--red-600)';
+
+  const wrongResults = results.filter(r => !r.correct);
 
   return (
     <div className="quiz-shell">
@@ -53,30 +52,26 @@ export function QuizResult({ results, pool, onRetry, onDone, onReviewWrong }: Qu
           </div>
         </div>
 
-        {wrong.length > 0 && (
+        {wrongResults.length > 0 && (
           <div style={{ marginTop: 16, textAlign: 'left' }}>
-            <h3 className="h-md" style={{ marginBottom: 8 }}>틀린 항목 ({wrong.length}개)</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {wrong.map((r, i) => {
-                const found = pool.find(p => p.item.id === r.itemId);
-                return found ? (
-                  <div key={i} className="ai-preview-item">
-                    <div className="t">{found.item.term}</div>
-                    <div className="d">{found.item.def}</div>
+            <h3 className="h-md" style={{ marginBottom: 8 }}>틀린 문제 ({wrongResults.length}개)</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {wrongResults.map((r) => {
+                const q = questions.find(q => q.id === r.questionId);
+                if (!q) return null;
+                return (
+                  <div key={r.questionId} className="ai-preview-item">
+                    <div className="t">{q.question}</div>
+                    <div className="d">정답: {q.options[q.answerIndex]}</div>
+                    {q.explanation && <div style={{ font: '400 12px/18px var(--font-sans)', color: 'var(--gray-500)', marginTop: 4 }}>{q.explanation}</div>}
                   </div>
-                ) : null;
+                );
               })}
             </div>
           </div>
         )}
 
         <div className="row" style={{ gap: 8, justifyContent: 'center', marginTop: 24 }}>
-          {wrong.length > 0 && (
-            <Button variant="outline" size="lg" leadingIcon="rotate-ccw"
-                    onClick={() => onReviewWrong(wrong.map(w => w.itemId))}>
-              틀린 것만 다시
-            </Button>
-          )}
           <Button variant="outline" size="lg" leadingIcon="repeat" onClick={onRetry}>다시 풀기</Button>
           <Button variant="solid-primary" size="lg" leadingIcon="check" onClick={onDone}>완료</Button>
         </div>
