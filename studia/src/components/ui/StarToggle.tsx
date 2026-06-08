@@ -2,7 +2,7 @@
 
 interface StarToggleProps {
   on: boolean;
-  onClick: () => void;
+  onClick: (e?: React.MouseEvent) => void;
   size?: number;
 }
 
